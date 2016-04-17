@@ -1,0 +1,74 @@
+ja:
+  wms:
+    enums:
+      zone_type:
+        frozen: 冷凍
+        chilled: 冷蔵
+        constant: 定温
+        ambient: 常温
+      required_temperature_type:
+        frozen: 冷凍
+        chilled: 冷蔵
+        constant: 定温
+        ambient: 常温
+      role:
+        floor_staff: 現場作業者
+        site_supervisor: 拠点責任者
+        quality: 品質管理
+        office: 事務・管理
+        management: 経営・本社
+        system_admin: システム管理者
+      status:
+        available: 在庫可
+        hold: 保留
+        shipped: 出荷済
+        discarded: 廃棄済
+        draft: 作業中
+        counting: カウント中
+        submitted: 提出済
+        approved: 承認済
+        validated: 検証済
+        failed: 検証エラー
+        completed: 完了
+        rolled_back: 取消済
+        open: 進行中
+        closed: 終了
+      receipt_status:
+        open: 作業中
+        completed: 完了
+      movement_type:
+        receive: 入荷
+        putaway: 格納
+        move: 移動
+        pick: ピッキング
+        ship: 出荷
+        adjust: 調整
+        discard: 廃棄
+      source_type:
+        manual: 手入力
+        csv: CSV
+        api: API
+      disposition:
+        hold: 保留
+        release: リリース
+        discard: 廃棄
+      breach_type:
+        high: 上限超過
+        low: 下限未満
+      detected_via:
+        live: リアルタイム
+        import: 取込時に検知
+      kind:
+        stock_opening: 期首在庫
+        temperature_csv: 温度CSV
+      action:
+        create: 作成
+        update: 更新
+        destroy: 削除
+        rollback: 取消
+  activerecord:
+    models:
+      site: 拠点
+      zone: ゾーン
+      location: ロケーション
+      customer: 荷主
