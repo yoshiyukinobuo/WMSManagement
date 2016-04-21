@@ -72,3 +72,77 @@ ja:
       zone: ゾーン
       location: ロケーション
       customer: 荷主
+      item: 品目
+      sensor: センサー
+      device_profile: デバイスプロファイル
+      user: ユーザー
+    attributes:
+      site:
+        code: 拠点コード
+        name: 拠点名
+        address: 住所
+        time_zone: タイムゾーン
+        active: 有効
+      zone:
+        site: 拠点
+        name: ゾーン名
+        zone_type: 温度帯
+        target_min: 目標下限(℃)
+        target_max: 目標上限(℃)
+        alert_min: 警報下限(℃)
+        alert_max: 警報上限(℃)
+        expected_interval_minutes: 測定間隔(分)
+        tolerance_minutes: 許容時間(分)
+        close_after_in_range: 解除に必要な連続正常回数
+        active: 有効
+      location:
+        zone: ゾーン
+        code: ロケーションコード
+        description: 説明
+        active: 有効
+      customer:
+        code: 荷主コード
+        name: 荷主名
+        active: 有効
+      item:
+        customer: 荷主
+        code: 品目コード
+        name: 品名
+        required_temperature_type: 要求温度帯
+        unit: 単位
+      sensor:
+        zone: ゾーン
+        device_profile: デバイスプロファイル
+        name: 名称
+        maker: メーカー
+        sensor_model: 型式
+        external_id: 外部ID
+        source_type: 取得方法
+        calibration_due_on: 校正期限
+        active: 有効
+      device_profile:
+        name: 名称
+        timestamp_column: 日時列(ヘッダー名)
+        value_column: 温度列(ヘッダー名)
+        time_format: 日時書式
+        time_zone: タイムゾーン
+        skip_lines: 読み飛ばし行数
+        delimiter: 区切り文字
+        encoding: 文字コード
+        notes: 備考
+      user:
+        name: 氏名
+        email_address: メールアドレス
+        role: ロール
+        password: パスワード
+        active: 有効
+      receipt:
+        site: 拠点
+        customer: 荷主
+        arrival_at: 到着日時
+      receipt_line:
+        lot_number: ロット番号
+        received_quantity: 実数量
+      shipment:
+        site: 拠点
+        customer: 荷主
