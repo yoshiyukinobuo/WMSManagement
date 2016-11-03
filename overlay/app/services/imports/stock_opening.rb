@@ -69,3 +69,74 @@ module Imports
     end
 
     # Rolls back a batch only if nothing else has touched its lots since.
+    def self.rollback!(batch)
+      raise WmsError, "実行済みの取込のみ取り消せます" unless batch.status == "completed"
+
+      lot_ids = Lot.where(import_batch_id: batch.id).pluck(:id)
+      if StockMovement.where(lot_id: lot_ids).where("import_batch_id IS NULL OR import_batch_id <> ?", batch.id).exists?
+        raise WmsError, "取込後に入出荷・移動があるため取り消せません"
+      end
+
+      ActiveRecord::Base.transaction do
+        # Bulk SQL on purpose: the ledger is append-only through ActiveRecord, rollback is the one audited exception.
+        StockMovement.where(import_batch_id: batch.id).delete_all
+        Lot.where(import_batch_id: batch.id).delete_all
+        batch.update!(status: "rolled_back", rolled_back_at: Time.current)
+        AuditLog.record!(action: "rollback", entity: batch, changeset: { "lots_removed" => lot_ids.size })
+      end
+    end
+
+    def self.read_table(batch)
+      data = batch.file.download
+      if batch.filename.to_s.downcase.end_with?(".xlsx")
+        sheet = Roo::Excelx.new(StringIO.new(data)).sheet(0)
+        (sheet.first_row..sheet.last_row).map { |i| sheet.row(i) }
+      else
+        CSV.parse(data.dup.force_encoding("UTF-8").scrub.delete_prefix("\uFEFF"))
+      end
+    end
+    private_class_method :read_table
+
+    def self.map_headers(header_row)
+      header_row.each_with_index.each_with_object({}) do |(h, col), map|
+        key = HEADERS.find { |_, aliases| aliases.include?(h.to_s.strip.downcase) }&.first
+        map[col] = key if key
+      end
+    end
+    private_class_method :map_headers
+
+    def self.check_row(row, allowed_sites)
+      site = allowed_sites[row[:site_code]] or return { error: "拠点コードが不明、またはアクセス権がありません: #{row[:site_code]}" }
+      customer = Customer.find_by(code: row[:customer_code]) or return { error: "荷主コードが不明です: #{row[:customer_code]}" }
+      location = Location.joins(:zone).find_by(code: row[:location_code], zones: { site_id: site.id }) or
+        return { error: "ロケーションが見つかりません: #{row[:location_code]}" }
+      qty = BigDecimal(row[:quantity].to_s.tr(",", ""), exception: false)
+      return { error: "数量が不正です: #{row[:quantity]}" } if qty.nil? || qty <= 0
+      return { error: "ロット番号が空です" } if row[:lot_number].blank?
+
+      item = row[:item_code].present? ? Item.find_by(customer_id: customer.id, code: row[:item_code]) : nil
+      return { error: "品目コードが不明です: #{row[:item_code]}" } if row[:item_code].present? && item.nil?
+
+      required = row[:required_temperature_type].presence && TEMPERATURE_ALIASES[row[:required_temperature_type].downcase]
+      return { error: "温度帯が不正です: #{row[:required_temperature_type]}" } if row[:required_temperature_type].present? && required.nil?
+
+      received_on = parse_date(row[:received_on]) || Date.current
+      expires_on = parse_date(row[:expires_on])
+      return { error: "日付が不正です" } if row[:expires_on].present? && expires_on.nil?
+
+      { data: { "site_id" => site.id, "customer_id" => customer.id, "item_id" => item&.id, "lot_number" => row[:lot_number],
+                "location_id" => location.id, "quantity" => qty.to_s("F"), "required_temperature_type" => required || item&.required_temperature_type,
+                "received_on" => received_on.iso8601, "expires_on" => expires_on&.iso8601 } }
+    end
+    private_class_method :check_row
+
+    def self.parse_date(value)
+      return nil if value.blank?
+
+      Date.parse(value.to_s)
+    rescue Date::Error
+      nil
+    end
+    private_class_method :parse_date
+  end
+end
