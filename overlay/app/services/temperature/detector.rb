@@ -46,3 +46,52 @@ module Temperature
               active = pending
               pending = nil
               streak = 0
+              recovery_at = nil
+            end
+          end
+        else
+          pending = nil unless active
+          next unless active
+
+          recovery_at ||= at
+          streak += 1
+          if streak >= @zone.close_after_in_range
+            found << active.merge(ended_at: recovery_at)
+            active = nil
+            streak = 0
+            recovery_at = nil
+          end
+        end
+      end
+      found << active.merge(ended_at: nil) if active
+      found
+    end
+
+    def track_peak(state, value)
+      dev = @zone.deviation(value)
+      return unless dev > state[:peak_dev].to_d
+
+      state[:peak_dev] = dev
+      state[:peak_value] = value
+    end
+
+    def persist(results)
+      results.map do |r|
+        excursion = @zone.excursions.find_or_initialize_by(started_at: r[:started_at])
+        next excursion if excursion.persisted? && excursion.status == "closed" # decisions are kept; never rewrite
+
+        is_new = excursion.new_record?
+        excursion.assign_attributes(peak_value: r[:peak_value], breach_type: r[:breach_type], ended_at: r[:ended_at],
+                                    status: r[:ended_at] ? "closed" : "open")
+        if is_new
+          excursion.detected_at = Time.current
+          excursion.detected_via = @via
+        end
+        excursion.save!
+        Excursions::ImpactRefresh.call(excursion)
+        Alerts.excursion_opened(excursion) if is_new
+        excursion
+      end
+    end
+  end
+end
