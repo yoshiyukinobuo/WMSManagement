@@ -29,3 +29,34 @@ class ReceiptLinesController < ApplicationController
     @line = ReceiptLine.new
     @message = "格納しました。"
     respond_panel
+  rescue WmsError => e
+    @line = ReceiptLine.new
+    @error = e.message
+    respond_panel
+  end
+
+  private
+
+  def respond_panel
+    respond_to do |format|
+      format.turbo_stream { render :panel, status: (@error ? :unprocessable_entity : :ok) }
+      format.html { redirect_to @receipt, @error ? { alert: @error } : { notice: @message } }
+    end
+  end
+
+  def set_receipt = @receipt = Receipt.accessible_by(Current.user).find(params[:receipt_id])
+
+  def find_location(id)
+    return nil if id.blank?
+
+    location = Location.accessible_by(Current.user).find(id)
+    raise WmsError, "入荷先拠点以外のロケーションは指定できません" unless location.zone.site_id == @receipt.site_id
+
+    location
+  end
+
+  def line_params
+    params.require(:receipt_line).permit(:lot_number, :slip_lot_number, :manifest_lot_number, :item_id, :expected_quantity,
+                                         :received_quantity, :unit, :required_temperature_type, :expires_on, :note)
+  end
+end
