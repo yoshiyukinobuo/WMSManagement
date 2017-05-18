@@ -25,3 +25,31 @@ class TemperatureReadingsController < ApplicationController
     errors = []
     values.each do |zone_id, value|
       Temperature::ManualEntry.call(zone: site.zones.find(zone_id), measured_at: measured_at, value: value)
+      saved += 1
+    rescue WmsError, ActiveRecord::RecordInvalid => e
+      errors << e.message
+    end
+    if errors.empty?
+      redirect_to temperature_path, notice: "#{saved}件の測定値を登録しました。"
+    else
+      redirect_to new_temperature_reading_path(site_id: site.id), alert: "#{saved}件登録、エラー: #{errors.join(' / ')}"
+    end
+  end
+
+  def new_correction
+    @reading = find_reading
+  end
+
+  def create_correction
+    reading = find_reading
+    corrected = reading.correct!(value: params[:value], reason: params[:reason])
+    Temperature::Detector.call(reading.zone, since: corrected.measured_at, via: "live")
+    redirect_to temperature_readings_path(zone_id: reading.zone_id), notice: "訂正を登録しました(元の値は履歴として保持されます)。"
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to correct_temperature_reading_path(reading), alert: e.message
+  end
+
+  private
+
+  def find_reading = TemperatureReading.accessible_by(Current.user).effective.find(params[:id])
+end
