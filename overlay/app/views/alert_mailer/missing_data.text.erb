@@ -1,0 +1,6 @@
+測定データが想定間隔(<%= @zone.expected_interval_minutes %>分)内に届いていません。
+
+ゾーン: <%= @zone %>
+最終測定: <%= @zone.last_reading_at ? I18n.l(@zone.last_reading_at, format: :long) : "データなし" %>
+
+センサーまたは記録作業を確認してください。
