@@ -1,0 +1,23 @@
+<h1 class="mb-4 text-2xl font-bold">監査ログ</h1>
+<%= form_with url: audit_logs_path, method: :get, class: "mb-4 flex flex-wrap gap-3", data: { controller: "search" } do |f| %>
+  <%= f.select :entity_type, options_for_select(@entity_types, params[:entity_type]), { include_blank: "全対象" }, class: "#{input_class} max-w-xs", data: { action: "change->search#submit" } %>
+  <%= f.number_field :entity_id, value: params[:entity_id], placeholder: "対象ID", class: "#{input_class} max-w-[10rem]", data: { action: "input->search#queue" } %>
+  <%= f.datetime_local_field :from, value: params[:from], class: "#{input_class} max-w-xs", data: { action: "change->search#submit" } %>
+<% end %>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">日時</th><th class="<%= th_class %>">操作者</th><th class="<%= th_class %>">操作</th><th class="<%= th_class %>">対象</th><th class="<%= th_class %>">変更内容(前→後 / 値)</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @logs.each do |l| %>
+        <tr>
+          <td class="<%= td_class %> whitespace-nowrap"><%= fmt_time(l.occurred_at) %></td>
+          <td class="<%= td_class %>"><%= l.actor || "システム" %></td>
+          <td class="<%= td_class %>"><%= enum_label(:action, l.action) %></td>
+          <td class="<%= td_class %>"><%= l.entity_type %> #<%= l.entity_id %></td>
+          <td class="<%= td_class %> max-w-xl break-words font-mono text-xs"><%= truncate(l.changeset.to_json, length: 400) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
