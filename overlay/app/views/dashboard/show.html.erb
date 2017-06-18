@@ -1,0 +1,35 @@
+<h1 class="mb-4 text-2xl font-bold">ダッシュボード</h1>
+<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+  <%= link_to excursions_path(status: "open"), class: "#{card_class} block hover:bg-slate-50" do %>
+    <div class="text-sm text-slate-500">進行中の温度逸脱</div>
+    <div class="text-3xl font-bold <%= 'text-red-600' if @open_excursions.any? %>"><%= @open_excursions.size %></div>
+  <% end %>
+  <%= link_to lots_path(status: "hold"), class: "#{card_class} block hover:bg-slate-50" do %>
+    <div class="text-sm text-slate-500">保留中ロット</div>
+    <div class="text-3xl font-bold <%= 'text-amber-600' if @held_lots.positive? %>"><%= @held_lots %></div>
+  <% end %>
+  <div class="<%= card_class %>">
+    <div class="text-sm text-slate-500">判定待ち(逸脱ロット)</div>
+    <div class="text-3xl font-bold"><%= @pending_impacts %></div>
+  </div>
+  <%= link_to temperature_path, class: "#{card_class} block hover:bg-slate-50" do %>
+    <div class="text-sm text-slate-500">測定データ欠測ゾーン</div>
+    <div class="text-3xl font-bold <%= 'text-red-600' if @missing_zones.any? %>"><%= @missing_zones.size %></div>
+  <% end %>
+</div>
+
+<div class="mt-6 grid gap-4 lg:grid-cols-2">
+  <section class="<%= card_class %>">
+    <h2 class="mb-2 font-semibold">進行中の温度逸脱</h2>
+    <% if @open_excursions.empty? %><p class="text-sm text-slate-500">ありません</p><% end %>
+    <% @open_excursions.each do |e| %>
+      <p class="py-1"><%= link_to "#{e.zone} — #{fmt_time(e.started_at)} 〜 (ピーク #{fmt_qty(e.peak_value)}℃)", e, class: "text-sky-700 underline" %></p>
+    <% end %>
+  </section>
+
+  <section class="<%= card_class %>">
+    <h2 class="mb-2 font-semibold">欠測ゾーン</h2>
+    <% if @missing_zones.empty? %><p class="text-sm text-slate-500">ありません</p><% end %>
+    <% @missing_zones.each do |z| %>
+      <p class="py-1"><%= z %> — 最終測定 <%= fmt_time(z.last_reading_at) || "なし" %></p>
+    <% end %>
