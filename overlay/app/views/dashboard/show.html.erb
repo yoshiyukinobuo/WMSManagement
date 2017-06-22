@@ -33,3 +33,38 @@
     <% @missing_zones.each do |z| %>
       <p class="py-1"><%= z %> — 最終測定 <%= fmt_time(z.last_reading_at) || "なし" %></p>
     <% end %>
+  </section>
+
+  <section class="<%= card_class %>">
+    <h2 class="mb-2 font-semibold">入荷の差異(直近7日・責任者確認)</h2>
+    <% if @flagged_lines.empty? %><p class="text-sm text-slate-500">ありません</p><% end %>
+    <% @flagged_lines.each do |l| %>
+      <p class="py-1 text-sm">
+        <%= link_to "#{l.receipt.site.code} 入荷##{l.receipt_id} #{l.lot_number}", l.receipt, class: "text-sky-700 underline" %>
+        <%= badge("3情報不一致", :amber) if l.source_mismatch %> <%= badge("数量差異", :amber) if l.quantity_discrepancy %>
+      </p>
+    <% end %>
+  </section>
+
+  <section class="<%= card_class %>">
+    <h2 class="mb-2 font-semibold">未格納のロット</h2>
+    <% if @unplaced.empty? %><p class="text-sm text-slate-500">ありません</p><% end %>
+    <% @unplaced.each do |lot| %>
+      <p class="py-1 text-sm"><%= link_to lot.to_s, lot, class: "text-sky-700 underline" %> <%= lot.customer.name %> / 未格納 <%= fmt_qty(lot.unplaced_quantity) %></p>
+    <% end %>
+  </section>
+
+  <section class="<%= card_class %>">
+    <div class="mb-2 flex items-center justify-between"><h2 class="font-semibold">最近の入荷</h2><%= link_to "新規入荷", new_receipt_path, class: btn_class %></div>
+    <% @recent_receipts.each do |r| %>
+      <p class="py-1 text-sm"><%= link_to "##{r.id} #{r.site.code} #{r.customer.name}", r, class: "text-sky-700 underline" %> <%= fmt_time(r.arrival_at) %></p>
+    <% end %>
+  </section>
+
+  <section class="<%= card_class %>">
+    <div class="mb-2 flex items-center justify-between"><h2 class="font-semibold">作業中の出荷指示</h2><%= link_to "新規出荷", new_shipment_path, class: btn_class %></div>
+    <% @open_shipments.each do |s| %>
+      <p class="py-1 text-sm"><%= link_to "##{s.id} #{s.site.code} #{s.customer.name}", s, class: "text-sky-700 underline" %> <%= s.destination %></p>
+    <% end %>
+  </section>
+</div>
