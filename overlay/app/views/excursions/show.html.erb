@@ -1,0 +1,37 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">温度逸脱 #<%= @excursion.id %> <%= badge(@excursion.open? ? "進行中" : "終了", @excursion.open? ? :red : :slate) %></h1>
+  <%= link_to "一覧へ", excursions_path, class: btn_class(:secondary) %>
+</div>
+
+<div class="<%= card_class %> mb-6 grid gap-2 text-sm sm:grid-cols-3">
+  <div><span class="text-slate-500">ゾーン:</span> <%= @excursion.zone %></div>
+  <div><span class="text-slate-500">警報範囲:</span> <%= fmt_qty(@excursion.zone.alert_min) %>〜<%= fmt_qty(@excursion.zone.alert_max) %>℃</div>
+  <div><span class="text-slate-500">ピーク値:</span> <%= fmt_qty(@excursion.peak_value) %>℃(<%= enum_label(:breach_type, @excursion.breach_type) %>)</div>
+  <div><span class="text-slate-500">開始:</span> <%= fmt_time(@excursion.started_at) %></div>
+  <div><span class="text-slate-500">終了:</span> <%= @excursion.ended_at ? fmt_time(@excursion.ended_at) : "継続中" %></div>
+  <div><span class="text-slate-500">継続:</span> <%= @excursion.duration_minutes %>分</div>
+  <div class="sm:col-span-3">
+    <span class="text-slate-500">検知:</span> <%= fmt_time(@excursion.detected_at) %> /
+    <%= @excursion.detected_at_import? ? "データ取込時に検知(検知前に出庫済みのロットが含まれる場合があります)" : "リアルタイム" %>
+  </div>
+</div>
+
+<section class="<%= card_class %> mb-6 overflow-x-auto">
+  <h2 class="mb-2 font-semibold">影響を受けたロット(<%= @impacts.size %>件)</h2>
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ロット</th><th class="<%= th_class %>">荷主</th><th class="<%= th_class %>">曝露(分)</th><th class="<%= th_class %>">判定</th><th class="<%= th_class %>">最終判定</th><th class="<%= th_class %>">判定入力</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @impacts.each do |i| %>
+        <tr>
+          <td class="<%= td_class %>"><%= link_to "#{i.lot.internal_id} #{i.lot.lot_number}", i.lot, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= i.lot.customer.name %></td>
+          <td class="<%= td_class %>"><%= i.exposure_minutes %></td>
+          <td class="<%= td_class %>">
+            <%= badge(enum_label(:disposition, i.disposition), { "hold" => :amber, "release" => :green, "discard" => :red }[i.disposition]) %>
+            <%= badge("検知前に出庫済", :amber) if i.already_left? %>
+          </td>
+          <td class="<%= td_class %>"><%= i.decided_at ? "#{fmt_time(i.decided_at)} #{i.decided_by}" : "" %><br><span class="text-slate-500"><%= i.comment %></span></td>
+          <td class="<%= td_class %>">
+            <% if can?(:decide_excursion) && i.disposition != "discard" %>
+              <%= form_with url: excursion_lot_impact_path(i), method: :patch, class: "flex flex-wrap gap-2" do |f| %>
+                <%= f.select :disposition, options_for_select([["リリース", "release"], ["廃棄", "discard"]]), {}, class: input_class %>
