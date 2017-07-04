@@ -35,3 +35,40 @@
             <% if can?(:decide_excursion) && i.disposition != "discard" %>
               <%= form_with url: excursion_lot_impact_path(i), method: :patch, class: "flex flex-wrap gap-2" do |f| %>
                 <%= f.select :disposition, options_for_select([["リリース", "release"], ["廃棄", "discard"]]), {}, class: input_class %>
+                <%= f.text_field :comment, placeholder: "コメント(必須)", required: true, class: input_class %>
+                <%= f.submit "判定を記録", class: btn_class(:secondary), data: { turbo_confirm: "判定を記録します。廃棄は取り消せません。" } %>
+              <% end %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @impacts.empty? %><tr><td colspan="6" class="px-3 py-4 text-center text-slate-500">影響ロットなし</td></tr><% end %>
+    </tbody>
+  </table>
+</section>
+
+<% if @decisions.any? %>
+  <section class="<%= card_class %> mb-6 overflow-x-auto">
+    <h2 class="mb-2 font-semibold">判定履歴(変更不可)</h2>
+    <table class="<%= table_class %>">
+      <thead><tr><th class="<%= th_class %>">日時</th><th class="<%= th_class %>">判定</th><th class="<%= th_class %>">承認者</th><th class="<%= th_class %>">コメント</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+        <% @decisions.each do |d| %>
+          <tr><td class="<%= td_class %>"><%= fmt_time(d.created_at) %></td><td class="<%= td_class %>"><%= enum_label(:disposition, d.disposition) %></td><td class="<%= td_class %>"><%= d.decided_by %></td><td class="<%= td_class %>"><%= d.comment %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>
+
+<section class="<%= card_class %> overflow-x-auto">
+  <h2 class="mb-2 font-semibold">前後の測定値(±1時間)</h2>
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">測定日時</th><th class="<%= th_class %>">センサー</th><th class="<%= th_class %>">温度(℃)</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @readings.each do |r| %>
+        <tr class="<%= 'bg-red-50' if r.zone.out_of_limits?(r.value) %>"><td class="<%= td_class %>"><%= fmt_time(r.measured_at) %></td><td class="<%= td_class %>"><%= r.sensor&.name %></td><td class="<%= td_class %>"><%= fmt_qty(r.value) %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
