@@ -1,0 +1,24 @@
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-bold">データ取込</h1>
+  <% if can?(:import_data) %><%= link_to "期首在庫を取り込む(Excel/CSV)", new_import_path, class: btn_class %><% end %>
+</div>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">#</th><th class="<%= th_class %>">日時</th><th class="<%= th_class %>">種別</th><th class="<%= th_class %>">ファイル</th><th class="<%= th_class %>">行数</th><th class="<%= th_class %>">エラー</th><th class="<%= th_class %>">状態</th><th class="<%= th_class %>">実行者</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @batches.each do |b| %>
+        <tr>
+          <td class="<%= td_class %>"><%= link_to b.id, b, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= fmt_time(b.created_at) %></td>
+          <td class="<%= td_class %>"><%= enum_label(:kind, b.kind) %></td>
+          <td class="<%= td_class %>"><%= b.filename %></td>
+          <td class="<%= td_class %>"><%= b.total_rows %></td>
+          <td class="<%= td_class %>"><%= b.error_rows %></td>
+          <td class="<%= td_class %>"><%= badge(enum_label(:status, b.status), { "completed" => :green, "failed" => :red, "rolled_back" => :slate }[b.status] || :sky) %></td>
+          <td class="<%= td_class %>"><%= b.uploaded_by %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
