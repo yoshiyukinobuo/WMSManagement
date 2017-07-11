@@ -1,0 +1,14 @@
+<h1 class="mb-4 text-2xl font-bold">期首在庫の取込(Excel移行)</h1>
+<div class="<%= card_class %> max-w-2xl space-y-4">
+  <%= form_with url: imports_path, multipart: true, class: "space-y-4" do |f| %>
+    <div><%= f.label :file, "ファイル(.xlsx / .csv)", class: label_class %><%= f.file_field :file, accept: ".xlsx,.csv", required: true, class: "block w-full text-sm" %></div>
+    <%= f.submit "検証する(まだ登録しません)", class: btn_class %>
+  <% end %>
+  <div class="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+    <p class="font-semibold">必須列</p>
+    <p>拠点コード(site_code)、荷主コード(customer_code)、ロット番号(lot_number)、ロケーション(location_code)、数量(quantity)</p>
+    <p class="mt-2 font-semibold">任意列</p>
+    <p>品目コード、単位、温度帯(冷凍/冷蔵/定温/常温)、入荷日、賞味期限</p>
+    <p class="mt-2">1行目をヘッダーにしてください。検証でエラーが1件でもあると取り込めません。実行後は、その取込内の在庫に他の入出荷がなければ取り消せます。</p>
+  </div>
+</div>
