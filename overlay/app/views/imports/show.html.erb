@@ -1,0 +1,23 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">取込 #<%= @batch.id %> <%= badge(enum_label(:status, @batch.status), { "completed" => :green, "failed" => :red, "rolled_back" => :slate }[@batch.status] || :sky) %></h1>
+  <div class="flex gap-3">
+    <%= link_to "一覧へ", imports_path, class: btn_class(:secondary) %>
+    <% if can?(:import_data) && @batch.stock_opening? %>
+      <% if @batch.status == "validated" %>
+        <%= button_to "取り込みを実行", commit_import_path(@batch), method: :post, class: btn_class, form: { data: { turbo_confirm: "#{@batch.payload.size}件のロットを登録します。よろしいですか?" } } %>
+      <% elsif @batch.status == "completed" %>
+        <%= button_to "取り込みを取り消す", rollback_import_path(@batch), method: :post, class: btn_class(:danger), form: { data: { turbo_confirm: "この取込で登録したロットと移動を削除します。よろしいですか?" } } %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+<div class="<%= card_class %> mb-6 grid gap-2 text-sm sm:grid-cols-4">
+  <div><span class="text-slate-500">種別:</span> <%= enum_label(:kind, @batch.kind) %></div>
+  <div><span class="text-slate-500">ファイル:</span> <%= @batch.filename %></div>
+  <div><span class="text-slate-500">総行数:</span> <%= @batch.total_rows %></div>
+  <div><span class="text-slate-500">エラー:</span> <%= @batch.error_rows %></div>
+  <div><span class="text-slate-500">登録:</span> <%= @batch.success_rows %></div>
+  <div><span class="text-slate-500">重複スキップ:</span> <%= @batch.skipped_rows %></div>
+  <div><span class="text-slate-500">実行者:</span> <%= @batch.uploaded_by %></div>
+</div>
+
