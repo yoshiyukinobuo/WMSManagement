@@ -21,3 +21,26 @@
   <div><span class="text-slate-500">実行者:</span> <%= @batch.uploaded_by %></div>
 </div>
 
+<% if @batch.row_errors.any? %>
+  <section class="<%= card_class %> mb-6 overflow-x-auto">
+    <h2 class="mb-2 font-semibold text-red-700">エラー(差異レポート・先頭200件)</h2>
+    <table class="<%= table_class %>">
+      <thead><tr><th class="<%= th_class %>">行</th><th class="<%= th_class %>">内容</th></tr></thead>
+      <tbody class="divide-y divide-slate-100"><% @batch.row_errors.each do |e| %><tr><td class="<%= td_class %>"><%= e["row"] %></td><td class="<%= td_class %>"><%= e["message"] %></td></tr><% end %></tbody>
+    </table>
+  </section>
+<% end %>
+
+<% if @batch.stock_opening? && @batch.payload.any? %>
+  <section class="<%= card_class %> overflow-x-auto">
+    <h2 class="mb-2 font-semibold">取込内容(プレビュー・先頭50件)</h2>
+    <table class="<%= table_class %>">
+      <thead><tr><th class="<%= th_class %>">行</th><th class="<%= th_class %>">ロット番号</th><th class="<%= th_class %>">ロケーション</th><th class="<%= th_class %>">数量</th><th class="<%= th_class %>">入荷日</th><th class="<%= th_class %>">期限</th><th class="<%= th_class %>">温度帯</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+        <% @batch.payload.first(50).each do |r| %>
+          <tr><td class="<%= td_class %>"><%= r["line"] %></td><td class="<%= td_class %>"><%= r["lot_number"] %></td><td class="<%= td_class %>"><%= Location.find_by(id: r["location_id"]) %></td><td class="<%= td_class %>"><%= r["quantity"] %></td><td class="<%= td_class %>"><%= r["received_on"] %></td><td class="<%= td_class %>"><%= r["expires_on"] %></td><td class="<%= td_class %>"><%= enum_label(:required_temperature_type, r["required_temperature_type"]) %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>
