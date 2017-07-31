@@ -1,0 +1,24 @@
+<h1 class="mb-4 text-2xl font-bold">ロット</h1>
+<%= form_with url: lots_path, method: :get, class: "mb-4 flex flex-wrap gap-3", data: { controller: "search" } do |f| %>
+  <%= f.search_field :q, value: params[:q], placeholder: "ロット番号・ロットID", class: "#{input_class} max-w-xs", data: { action: "input->search#queue" } %>
+  <%= f.select :status, options_for_select(enum_options(:status, Lot::STATUSES), params[:status]), { include_blank: "全状態" }, class: "#{input_class} max-w-xs", data: { action: "change->search#submit" } %>
+<% end %>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ロットID</th><th class="<%= th_class %>">ロット番号</th><th class="<%= th_class %>">荷主</th><th class="<%= th_class %>">拠点</th><th class="<%= th_class %>">入荷日</th><th class="<%= th_class %>">期限</th><th class="<%= th_class %>">状態</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @lots.each do |lot| %>
+        <tr>
+          <td class="<%= td_class %>"><%= link_to lot.internal_id, lot, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= lot.lot_number %></td>
+          <td class="<%= td_class %>"><%= lot.customer.name %></td>
+          <td class="<%= td_class %>"><%= lot.site.code %></td>
+          <td class="<%= td_class %>"><%= fmt_date(lot.received_on) %></td>
+          <td class="<%= td_class %>"><%= fmt_date(lot.expires_on) %></td>
+          <td class="<%= td_class %>"><%= lot_status_badge(lot) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
