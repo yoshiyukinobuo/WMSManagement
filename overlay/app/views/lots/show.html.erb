@@ -1,0 +1,51 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold"><%= @lot.internal_id %> <%= lot_status_badge(@lot) %></h1>
+  <div class="flex flex-wrap gap-3">
+    <%= link_to "温度履歴CSV", lot_temperature_report_path(lot_id: @lot.id, format: :csv), class: btn_class(:secondary) %>
+    <% if can?(:place_hold) %>
+      <% if @lot.available? %>
+        <%= button_to "保留にする", hold_lot_path(@lot), method: :patch, params: { reason: "手動保留" }, class: btn_class(:secondary) %>
+      <% elsif @lot.hold? %>
+        <%= button_to "保留解除", unhold_lot_path(@lot), method: :patch, class: btn_class(:secondary) %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="<%= card_class %> mb-6 grid gap-2 text-sm sm:grid-cols-3">
+  <div><span class="text-slate-500">ロット番号:</span> <%= @lot.lot_number %></div>
+  <div><span class="text-slate-500">荷主:</span> <%= @lot.customer %></div>
+  <div><span class="text-slate-500">品目:</span> <%= @lot.item || "—" %></div>
+  <div><span class="text-slate-500">入荷日:</span> <%= fmt_date(@lot.received_on) %></div>
+  <div><span class="text-slate-500">賞味期限:</span> <%= fmt_date(@lot.expires_on) %></div>
+  <div><span class="text-slate-500">要求温度帯:</span> <%= enum_label(:required_temperature_type, @lot.required_temperature_type).presence || "指定なし" %></div>
+  <% if @lot.hold_reason.present? %><div class="sm:col-span-3 text-amber-700">保留理由: <%= @lot.hold_reason %></div><% end %>
+  <% if @lot.unplaced_quantity.positive? %><div class="sm:col-span-3 text-amber-700">未格納数量: <%= fmt_qty(@lot.unplaced_quantity) %></div><% end %>
+</div>
+
+<section class="<%= card_class %> mb-6 overflow-x-auto">
+  <h2 class="mb-2 font-semibold">現在の在庫</h2>
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ロケーション</th><th class="<%= th_class %>">数量</th><th class="<%= th_class %> print:hidden"></th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @levels.each do |lv| %>
+        <tr>
+          <td class="<%= td_class %>"><%= lv.location %></td>
+          <td class="<%= td_class %>"><%= fmt_qty(lv.quantity) %></td>
+          <td class="<%= td_class %> print:hidden"><% if can?(:operate_stock) %><%= link_to "移動・廃棄", new_movement_path(lot_id: @lot.id, from_location_id: lv.location_id), class: "text-sky-700 underline" %><% end %></td>
+        </tr>
+      <% end %>
+      <% if @levels.empty? %><tr><td colspan="3" class="px-3 py-4 text-center text-slate-500">在庫なし</td></tr><% end %>
+    </tbody>
+  </table>
+</section>
+
+<section class="<%= card_class %> mb-6 overflow-x-auto">
+  <h2 class="mb-2 font-semibold">温度履歴(保管ゾーンごと)</h2>
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ゾーン</th><th class="<%= th_class %>">開始</th><th class="<%= th_class %>">終了</th><th class="<%= th_class %>">最低℃</th><th class="<%= th_class %>">最高℃</th><th class="<%= th_class %>">測定数</th><th class="<%= th_class %>">逸脱</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @segments.each do |s| %>
+        <tr>
+          <td class="<%= td_class %>"><%= s.zone %></td>
+          <td class="<%= td_class %>"><%= fmt_time(s.from) %></td>
