@@ -49,3 +49,54 @@
         <tr>
           <td class="<%= td_class %>"><%= s.zone %></td>
           <td class="<%= td_class %>"><%= fmt_time(s.from) %></td>
+          <td class="<%= td_class %>"><%= s.to ? fmt_time(s.to) : "保管中" %></td>
+          <td class="<%= td_class %>"><%= fmt_qty(s.min) %></td>
+          <td class="<%= td_class %>"><%= fmt_qty(s.max) %></td>
+          <td class="<%= td_class %>"><%= s.count %></td>
+          <td class="<%= td_class %>"><% s.excursions.each do |e| %><%= link_to "##{e.id}", e, class: "text-red-700 underline mr-1" %><% end %></td>
+        </tr>
+      <% end %>
+      <% if @segments.empty? %><tr><td colspan="7" class="px-3 py-4 text-center text-slate-500">データなし</td></tr><% end %>
+    </tbody>
+  </table>
+</section>
+
+<% if @impacts.any? %>
+  <section class="<%= card_class %> mb-6 overflow-x-auto">
+    <h2 class="mb-2 font-semibold">温度逸脱の影響</h2>
+    <table class="<%= table_class %>">
+      <thead><tr><th class="<%= th_class %>">逸脱</th><th class="<%= th_class %>">ゾーン</th><th class="<%= th_class %>">曝露(分)</th><th class="<%= th_class %>">判定</th><th class="<%= th_class %>">コメント</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+        <% @impacts.each do |i| %>
+          <tr>
+            <td class="<%= td_class %>"><%= link_to "##{i.excursion_id}", i.excursion, class: "text-sky-700 underline" %></td>
+            <td class="<%= td_class %>"><%= i.excursion.zone %></td>
+            <td class="<%= td_class %>"><%= i.exposure_minutes %></td>
+            <td class="<%= td_class %>"><%= enum_label(:disposition, i.disposition) %> <%= badge("検知前に出庫済", :amber) if i.already_left? %></td>
+            <td class="<%= td_class %>"><%= i.comment %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>
+
+<section class="<%= card_class %> overflow-x-auto">
+  <h2 class="mb-2 font-semibold">移動履歴(台帳)</h2>
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">日時</th><th class="<%= th_class %>">種別</th><th class="<%= th_class %>">移動元</th><th class="<%= th_class %>">移動先</th><th class="<%= th_class %>">数量</th><th class="<%= th_class %>">担当</th><th class="<%= th_class %>">備考</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @movements.each do |m| %>
+        <tr>
+          <td class="<%= td_class %>"><%= fmt_time(m.performed_at) %></td>
+          <td class="<%= td_class %>"><%= enum_label(:movement_type, m.movement_type) %></td>
+          <td class="<%= td_class %>"><%= m.from_location %></td>
+          <td class="<%= td_class %>"><%= m.to_location %></td>
+          <td class="<%= td_class %>"><%= fmt_qty(m.quantity) %></td>
+          <td class="<%= td_class %>"><%= m.performed_by %></td>
+          <td class="<%= td_class %>"><%= m.note %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
