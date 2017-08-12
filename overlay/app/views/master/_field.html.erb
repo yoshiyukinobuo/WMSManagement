@@ -1,0 +1,25 @@
+<% name = field[:name] %>
+<div>
+  <% if field[:as] == :boolean %>
+    <label class="flex min-h-[44px] items-center gap-2 text-base">
+      <%= f.check_box name, class: "h-5 w-5" %> <%= f.object.class.human_attribute_name(name.to_s.delete_suffix("_id")) %>
+    </label>
+  <% else %>
+    <%= f.label name, f.object.class.human_attribute_name(name.to_s.delete_suffix("_id")), class: label_class %>
+    <% case field[:as] %>
+    <% when :select %>
+      <%= f.select name, options_for_select(field[:collection], f.object.public_send(name)), { include_blank: field[:blank] ? true : false }, class: input_class %>
+    <% when :number %>
+      <%= f.number_field name, step: "0.1", class: input_class %>
+    <% when :integer %>
+      <%= f.number_field name, step: 1, class: input_class %>
+    <% when :date %>
+      <%= f.date_field name, class: input_class %>
+    <% when :textarea %>
+      <%= f.text_area name, rows: 3, class: input_class %>
+    <% else %>
+      <%= f.text_field name, class: input_class %>
+    <% end %>
+  <% end %>
+  <% if field[:hint] %><p class="mt-1 text-xs text-slate-500"><%= field[:hint] %></p><% end %>
+</div>
