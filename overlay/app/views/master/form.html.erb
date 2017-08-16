@@ -1,0 +1,13 @@
+<h1 class="mb-4 text-2xl font-bold"><%= title %> — <%= @record.new_record? ? "新規登録" : "編集" %></h1>
+<div class="<%= card_class %> max-w-2xl">
+  <%= render "shared/errors", record: @record %>
+  <%= form_with model: @record, url: (@record.new_record? ? polymorphic_path(model) : polymorphic_path(@record)), class: "space-y-4" do |f| %>
+    <% form_fields.each do |field| %>
+      <%= render "master/field", f: f, field: field %>
+    <% end %>
+    <div class="flex gap-3 pt-2">
+      <%= f.submit "保存", class: btn_class %>
+      <%= link_to "キャンセル", polymorphic_path(model), class: btn_class(:secondary) %>
+    </div>
+  <% end %>
+</div>
