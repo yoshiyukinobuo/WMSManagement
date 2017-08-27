@@ -1,0 +1,22 @@
+<h1 class="mb-4 text-2xl font-bold">在庫の移動・廃棄</h1>
+<div class="<%= card_class %> max-w-2xl">
+  <p class="mb-4 text-sm">ロット <strong><%= @lot %></strong> / 移動元 <strong><%= @from %></strong> / 在庫 <strong><%= fmt_qty(@available) %></strong></p>
+  <%= form_with url: movements_path, class: "space-y-4" do |f| %>
+    <%= f.hidden_field :lot_id, value: @lot.id %>
+    <%= f.hidden_field :from_location_id, value: @from.id %>
+    <div class="flex gap-6">
+      <label class="flex min-h-[44px] items-center gap-2"><%= f.radio_button :kind, "move", checked: true, class: "h-5 w-5" %> 移動</label>
+      <label class="flex min-h-[44px] items-center gap-2"><%= f.radio_button :kind, "discard", class: "h-5 w-5" %> 廃棄</label>
+    </div>
+    <div>
+      <%= f.label :to_location_id, "移動先(移動の場合)", class: label_class %>
+      <%= f.select :to_location_id, options_for_select(@destinations.map { |l| ["#{l} (#{enum_label(:zone_type, l.zone.zone_type)})#{' ※温度帯不一致' unless l.zone.satisfies?(@lot.required_temperature_type)}", l.id] }), { include_blank: true }, class: input_class %>
+    </div>
+    <div><%= f.label :quantity, "数量", class: label_class %><%= f.number_field :quantity, step: "any", min: 0, value: @available, max: @available, class: input_class, required: true %></div>
+    <div><%= f.label :note, "備考", class: label_class %><%= f.text_field :note, class: input_class %></div>
+    <% if can?(:override_zone_mismatch) %>
+      <label class="flex min-h-[44px] items-center gap-2"><%= check_box_tag :force, "1", false, class: "h-5 w-5" %> 温度帯不一致でも移動(責任者のみ)</label>
+    <% end %>
+    <div class="flex gap-3"><%= f.submit "実行", class: btn_class %><%= link_to "キャンセル", @lot, class: btn_class(:secondary) %></div>
+  <% end %>
+</div>
