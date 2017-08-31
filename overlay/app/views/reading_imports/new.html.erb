@@ -1,0 +1,14 @@
+<h1 class="mb-4 text-2xl font-bold">温度データのCSV取込</h1>
+<div class="<%= card_class %> max-w-2xl">
+  <% if @sensors.empty? %>
+    <p class="text-slate-600">取得方法が「CSV」のセンサーが登録されていません。センサーとデバイスプロファイルを先に登録してください。</p>
+  <% else %>
+    <%= form_with url: reading_imports_path, multipart: true, class: "space-y-4" do |f| %>
+      <div><%= f.label :sensor_id, "センサー", class: label_class %>
+        <%= f.select :sensor_id, options_for_select(@sensors.map { |s| ["#{s}#{' (プロファイル未設定)' unless s.device_profile}", s.id] }), {}, class: input_class %></div>
+      <div><%= f.label :file, "CSVファイル", class: label_class %><%= f.file_field :file, accept: ".csv,text/csv", required: true, class: "block w-full text-sm" %></div>
+      <p class="text-xs text-slate-500">同じファイルを再取込しても重複登録されません。過去分のデータで逸脱が見つかった場合、検知方法は「取込時に検知」として記録されます。</p>
+      <%= f.submit "取り込む", class: btn_class %>
+    <% end %>
+  <% end %>
+</div>
