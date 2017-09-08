@@ -1,0 +1,40 @@
+<% lines = ReceiptLine.where(receipt_id: receipt.id).includes(:lot, :item).order(:id) %>
+<% items = Item.where(customer_id: receipt.customer_id).order(:code) %>
+<% locations = Location.accessible_by(Current.user).active.includes(zone: :site).where(zones: { site_id: receipt.site_id }).order(:zone_id, :code) %>
+<div id="line_panel" class="space-y-6">
+  <% if message %><p class="rounded-md bg-green-100 px-4 py-3 text-green-800"><%= message %></p><% end %>
+  <% if error %><p class="rounded-md bg-red-100 px-4 py-3 text-red-800"><%= error %></p><% end %>
+
+  <section class="<%= card_class %> overflow-x-auto">
+    <h2 class="mb-2 font-semibold">登録済みロット</h2>
+    <table class="<%= table_class %>">
+      <thead><tr>
+        <th class="<%= th_class %>">ロットID</th><th class="<%= th_class %>">ロット番号</th><th class="<%= th_class %>">伝票 / マニフェスト</th>
+        <th class="<%= th_class %>">予定</th><th class="<%= th_class %>">実数</th><th class="<%= th_class %>">温度帯</th><th class="<%= th_class %>">フラグ</th><th class="<%= th_class %>">格納</th>
+      </tr></thead>
+      <tbody class="divide-y divide-slate-100">
+        <% lines.each do |l| %>
+          <% unplaced = l.lot ? l.lot.unplaced_quantity : 0 %>
+          <tr>
+            <td class="<%= td_class %>"><%= link_to l.lot.internal_id, l.lot, class: "text-sky-700 underline" if l.lot %></td>
+            <td class="<%= td_class %>"><%= l.lot_number %></td>
+            <td class="<%= td_class %>"><%= [l.slip_lot_number, l.manifest_lot_number].compact_blank.join(" / ") %></td>
+            <td class="<%= td_class %>"><%= fmt_qty(l.expected_quantity) %></td>
+            <td class="<%= td_class %>"><%= fmt_qty(l.received_quantity) %> <%= l.unit %></td>
+            <td class="<%= td_class %>"><%= enum_label(:required_temperature_type, l.required_temperature_type) %></td>
+            <td class="<%= td_class %>"><%= badge("3情報不一致", :amber) if l.source_mismatch %> <%= badge("数量差異", :amber) if l.quantity_discrepancy %></td>
+            <td class="<%= td_class %>">
+              <% if unplaced.positive? && can?(:operate_stock) %>
+                <%= form_with url: putaway_receipt_receipt_line_path(receipt, l), method: :patch, class: "flex gap-2" do |f| %>
+                  <%= f.select :location_id, options_for_select(locations.map { |loc| ["#{loc.zone.name}/#{loc.code}", loc.id] }), { include_blank: "未格納 #{fmt_qty(unplaced)}" }, class: input_class %>
+                  <%= f.submit "格納", class: btn_class(:secondary) %>
+                <% end %>
+              <% else %>済<% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if lines.empty? %><tr><td colspan="8" class="px-3 py-6 text-center text-slate-500">まだロットがありません</td></tr><% end %>
+      </tbody>
+    </table>
+  </section>
+
