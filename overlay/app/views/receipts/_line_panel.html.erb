@@ -38,3 +38,43 @@
     </table>
   </section>
 
+  <% if can?(:operate_stock) && !receipt.completed? %>
+    <section class="<%= card_class %>">
+      <h2 class="mb-3 font-semibold">ロットを登録</h2>
+      <%= form_with model: [receipt, line], id: "new_receipt_line", class: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3", data: { controller: "location-filter" } do |f| %>
+        <div><%= f.label :lot_number, "ロット番号(現品)", class: label_class %><%= f.text_field :lot_number, class: input_class, autofocus: true %></div>
+        <div><%= f.label :slip_lot_number, "ロット番号(伝票)", class: label_class %><%= f.text_field :slip_lot_number, class: input_class %></div>
+        <div><%= f.label :manifest_lot_number, "ロット番号(マニフェスト)", class: label_class %><%= f.text_field :manifest_lot_number, class: input_class %></div>
+        <div>
+          <%= f.label :item_id, "品目(任意)", class: label_class %>
+          <select name="receipt_line[item_id]" id="receipt_line_item_id" class="<%= input_class %>" data-action="change->location-filter#itemChanged">
+            <option value="">(未指定)</option>
+            <% items.each do |i| %><option value="<%= i.id %>" data-required-type="<%= i.required_temperature_type %>" data-unit="<%= i.unit %>" <%= "selected" if line.item_id == i.id %>><%= i %></option><% end %>
+          </select>
+        </div>
+        <div><%= f.label :expected_quantity, "予定数量", class: label_class %><%= f.number_field :expected_quantity, step: "any", min: 0, class: input_class %></div>
+        <div><%= f.label :received_quantity, "実数量", class: label_class %><%= f.number_field :received_quantity, step: "any", min: 0, class: input_class %></div>
+        <div><%= f.label :unit, "単位", class: label_class %><%= f.text_field :unit, value: line.unit.presence || "個", class: input_class, data: { location_filter_target: "unit" } %></div>
+        <div>
+          <%= f.label :required_temperature_type, "要求温度帯", class: label_class %>
+          <%= f.select :required_temperature_type, options_for_select(enum_options(:required_temperature_type, Zone::TYPES), line.required_temperature_type), { include_blank: "(指定なし)" },
+                class: input_class, data: { location_filter_target: "type", action: "change->location-filter#filter" } %>
+        </div>
+        <div><%= f.label :expires_on, "賞味期限", class: label_class %><%= f.date_field :expires_on, class: input_class %></div>
+        <div>
+          <label for="receipt_line_location_id" class="<%= label_class %>">格納ロケーション(任意)</label>
+          <select name="receipt_line[location_id]" id="receipt_line_location_id" class="<%= input_class %>" data-location-filter-target="location">
+            <option value="">(後で格納)</option>
+            <% locations.each do |loc| %><option value="<%= loc.id %>" data-zone-type="<%= loc.zone.zone_type %>"><%= loc.zone.name %> / <%= loc.code %>(<%= enum_label(:zone_type, loc.zone.zone_type) %>)</option><% end %>
+          </select>
+          <p class="mt-1 text-xs text-slate-500">要求温度帯に合うロケーションのみ表示されます。</p>
+        </div>
+        <div class="sm:col-span-2"><%= f.label :note, "備考", class: label_class %><%= f.text_field :note, class: input_class %></div>
+        <% if can?(:override_zone_mismatch) %>
+          <label class="flex min-h-[44px] items-center gap-2"><%= check_box_tag :force, "1", false, class: "h-5 w-5" %> 温度帯不一致でも格納(責任者のみ)</label>
+        <% end %>
+        <div class="sm:col-span-2 lg:col-span-3"><%= f.submit "登録", class: btn_class %></div>
+      <% end %>
+    </section>
+  <% end %>
+</div>
