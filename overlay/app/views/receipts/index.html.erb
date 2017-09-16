@@ -1,0 +1,27 @@
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-bold">入荷</h1>
+  <% if can?(:operate_stock) %><%= link_to "新規入荷", new_receipt_path, class: btn_class %><% end %>
+</div>
+<%= form_with url: receipts_path, method: :get, class: "mb-4 flex flex-wrap gap-3", data: { controller: "search" } do |f| %>
+  <%= f.search_field :q, value: params[:q], placeholder: "マニフェスト・車両・ドライバー", class: "#{input_class} max-w-xs", data: { action: "input->search#queue" } %>
+  <%= f.select :site_id, options_for_select(accessible_sites.map { |s| [s.to_s, s.id] }, params[:site_id]), { include_blank: "全拠点" }, class: "#{input_class} max-w-xs", data: { action: "change->search#submit" } %>
+<% end %>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">#</th><th class="<%= th_class %>">到着</th><th class="<%= th_class %>">拠点</th><th class="<%= th_class %>">荷主</th><th class="<%= th_class %>">車両/ドライバー</th><th class="<%= th_class %>">マニフェスト</th><th class="<%= th_class %>">状態</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @receipts.each do |r| %>
+        <tr>
+          <td class="<%= td_class %>"><%= link_to r.id, r, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= fmt_time(r.arrival_at) %></td>
+          <td class="<%= td_class %>"><%= r.site.code %></td>
+          <td class="<%= td_class %>"><%= r.customer.name %></td>
+          <td class="<%= td_class %>"><%= [r.vehicle, r.driver].compact_blank.join(" / ") %></td>
+          <td class="<%= td_class %>"><%= r.manifest_ref %></td>
+          <td class="<%= td_class %>"><%= badge(enum_label(:receipt_status, r.status), r.completed? ? :green : :sky) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
