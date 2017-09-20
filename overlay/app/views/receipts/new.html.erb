@@ -1,0 +1,16 @@
+<h1 class="mb-4 text-2xl font-bold">入荷伝票の作成</h1>
+<div class="<%= card_class %> max-w-2xl">
+  <%= render "shared/errors", record: @receipt %>
+  <%= form_with model: @receipt, class: "space-y-4" do |f| %>
+    <div><%= f.label :site_id, "拠点", class: label_class %><%= f.select :site_id, options_for_select(accessible_sites.map { |s| [s.to_s, s.id] }, @receipt.site_id), {}, class: input_class %></div>
+    <div><%= f.label :customer_id, "荷主", class: label_class %><%= f.select :customer_id, options_for_select(Customer.order(:code).map { |c| [c.to_s, c.id] }, @receipt.customer_id), {}, class: input_class %></div>
+    <div><%= f.label :arrival_at, "到着日時", class: label_class %><%= f.datetime_local_field :arrival_at, class: input_class %></div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div><%= f.label :vehicle, "車両", class: label_class %><%= f.text_field :vehicle, class: input_class %></div>
+      <div><%= f.label :driver, "ドライバー", class: label_class %><%= f.text_field :driver, class: input_class %></div>
+    </div>
+    <div><%= f.label :manifest_ref, "マニフェスト/伝票番号", class: label_class %><%= f.text_field :manifest_ref, class: input_class %></div>
+    <div><%= f.label :notes, "備考", class: label_class %><%= f.text_area :notes, rows: 2, class: input_class %></div>
+    <div class="flex gap-3"><%= f.submit "作成してロット登録へ", class: btn_class %><%= link_to "キャンセル", receipts_path, class: btn_class(:secondary) %></div>
+  <% end %>
+</div>
