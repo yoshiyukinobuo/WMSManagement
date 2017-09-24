@@ -1,0 +1,20 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">入荷 #<%= @receipt.id %> <%= badge(enum_label(:receipt_status, @receipt.status), @receipt.completed? ? :green : :sky) %></h1>
+  <div class="flex gap-3">
+    <%= link_to "一覧へ", receipts_path, class: btn_class(:secondary) %>
+    <% if can?(:operate_stock) && !@receipt.completed? %>
+      <%= button_to "入荷を完了", complete_receipt_path(@receipt), method: :patch, class: btn_class, form: { data: { turbo_confirm: "入荷を完了しますか?完了後はロットを追加できません。" } } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="<%= card_class %> mb-6 grid gap-2 text-sm sm:grid-cols-3">
+  <div><span class="text-slate-500">拠点:</span> <%= @receipt.site %></div>
+  <div><span class="text-slate-500">荷主:</span> <%= @receipt.customer %></div>
+  <div><span class="text-slate-500">到着:</span> <%= fmt_time(@receipt.arrival_at) %></div>
+  <div><span class="text-slate-500">車両:</span> <%= @receipt.vehicle %></div>
+  <div><span class="text-slate-500">ドライバー:</span> <%= @receipt.driver %></div>
+  <div><span class="text-slate-500">マニフェスト:</span> <%= @receipt.manifest_ref %></div>
+  <% if @receipt.notes.present? %><div class="sm:col-span-3"><span class="text-slate-500">備考:</span> <%= @receipt.notes %></div><% end %>
+</div>
+
