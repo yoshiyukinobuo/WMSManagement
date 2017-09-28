@@ -18,3 +18,24 @@
   <% if @receipt.notes.present? %><div class="sm:col-span-3"><span class="text-slate-500">備考:</span> <%= @receipt.notes %></div><% end %>
 </div>
 
+<%= render "receipts/line_panel", receipt: @receipt, line: @line, error: nil, message: nil %>
+
+<section class="<%= card_class %> mt-6">
+  <h2 class="mb-2 font-semibold">手書き伝票の写真</h2>
+  <div class="flex flex-wrap gap-3">
+    <% @receipt.slip_photos.each do |photo| %>
+      <% if photo.image? %>
+        <%= link_to url_for(photo), target: "_blank", rel: "noopener" do %><%= image_tag url_for(photo), class: "h-32 rounded border object-cover" %><% end %>
+      <% else %>
+        <%= link_to photo.filename.to_s, url_for(photo), target: "_blank", rel: "noopener", class: "text-sky-700 underline" %>
+      <% end %>
+    <% end %>
+    <% unless @receipt.slip_photos.attached? %><p class="text-sm text-slate-500">写真はありません</p><% end %>
+  </div>
+  <% if can?(:operate_stock) %>
+    <%= form_with url: attach_photos_receipt_path(@receipt), multipart: true, class: "mt-3 flex flex-wrap items-center gap-3" do |f| %>
+      <%= f.file_field :photos, multiple: true, accept: "image/*", class: "text-sm" %>
+      <%= f.submit "アップロード", class: btn_class(:secondary) %>
+    <% end %>
+  <% end %>
+</section>
