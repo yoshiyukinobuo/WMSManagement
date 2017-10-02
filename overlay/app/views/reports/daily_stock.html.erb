@@ -1,0 +1,19 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">日次在庫レポート <%= @site.code %> <%= @date %></h1>
+  <div class="flex gap-3 print:hidden">
+    <%= link_to "CSV", daily_stock_report_path(site_id: @site.id, date: @date, format: :csv), class: btn_class(:secondary) %>
+    <button type="button" class="<%= btn_class(:secondary) %>" data-controller="print" data-action="print#print">印刷</button>
+    <%= link_to "戻る", reports_path, class: btn_class(:secondary) %>
+  </div>
+</div>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ロケーション</th><th class="<%= th_class %>">ロットID</th><th class="<%= th_class %>">ロット番号</th><th class="<%= th_class %>">荷主</th><th class="<%= th_class %>">数量</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @rows.each do |r| %>
+        <tr><td class="<%= td_class %>"><%= r.location %></td><td class="<%= td_class %>"><%= r.lot.internal_id %></td><td class="<%= td_class %>"><%= r.lot.lot_number %></td><td class="<%= td_class %>"><%= r.lot.customer.name %></td><td class="<%= td_class %>"><%= fmt_qty(r.quantity) %></td></tr>
+      <% end %>
+      <% if @rows.empty? %><tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">在庫なし</td></tr><% end %>
+    </tbody>
+  </table>
+</div>
