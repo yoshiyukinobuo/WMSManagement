@@ -1,0 +1,20 @@
+<h1 class="mb-4 text-2xl font-bold">レポート・エクスポート</h1>
+<div class="grid gap-4 lg:grid-cols-2">
+  <section class="<%= card_class %> space-y-3">
+    <h2 class="font-semibold">在庫</h2>
+    <%= link_to "現在庫CSV", stock_report_path(format: :csv), class: btn_class(:secondary) %>
+    <%= form_with url: daily_stock_report_path, method: :get, class: "flex flex-wrap items-end gap-3" do |f| %>
+      <div><%= f.label :site_id, "拠点", class: label_class %><%= f.select :site_id, options_for_select(@sites.map { |s| [s.to_s, s.id] }), {}, class: input_class %></div>
+      <div><%= f.label :date, "日付", class: label_class %><%= f.date_field :date, value: Date.current, class: input_class %></div>
+      <%= f.submit "日次在庫レポート", class: btn_class %>
+    <% end %>
+  </section>
+
+  <section class="<%= card_class %> space-y-3">
+    <h2 class="font-semibold">移動履歴</h2>
+    <%= form_with url: movements_report_path(format: :csv), method: :get, class: "flex flex-wrap items-end gap-3" do |f| %>
+      <div><%= f.label :from, "自", class: label_class %><%= f.datetime_local_field :from, class: input_class %></div>
+      <div><%= f.label :to, "至", class: label_class %><%= f.datetime_local_field :to, class: input_class %></div>
+      <%= f.submit "CSV出力", class: btn_class(:secondary) %>
+    <% end %>
+  </section>
