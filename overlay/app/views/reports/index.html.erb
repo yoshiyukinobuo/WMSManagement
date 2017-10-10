@@ -18,3 +18,24 @@
       <%= f.submit "CSV出力", class: btn_class(:secondary) %>
     <% end %>
   </section>
+
+  <section class="<%= card_class %> space-y-3">
+    <h2 class="font-semibold">ゾーン温度ログ(監査・顧客提出用)</h2>
+    <%= form_with url: zone_log_report_path, method: :get, class: "flex flex-wrap items-end gap-3" do |f| %>
+      <div><%= f.label :zone_id, "ゾーン", class: label_class %><%= f.select :zone_id, options_for_select(@zones.map { |z| [z.to_s, z.id] }), {}, class: input_class %></div>
+      <div><%= f.label :from, "自", class: label_class %><%= f.datetime_local_field :from, value: 7.days.ago.strftime("%Y-%m-%dT%H:%M"), class: input_class %></div>
+      <div><%= f.label :to, "至", class: label_class %><%= f.datetime_local_field :to, value: Time.current.strftime("%Y-%m-%dT%H:%M"), class: input_class %></div>
+      <%= f.submit "表示", class: btn_class %>
+    <% end %>
+  </section>
+
+  <section class="<%= card_class %> space-y-3">
+    <h2 class="font-semibold">逸脱履歴</h2>
+    <%= form_with url: excursion_history_report_path(format: :csv), method: :get, class: "flex flex-wrap items-end gap-3" do |f| %>
+      <div><%= f.label :from, "自", class: label_class %><%= f.datetime_local_field :from, class: input_class %></div>
+      <div><%= f.label :to, "至", class: label_class %><%= f.datetime_local_field :to, class: input_class %></div>
+      <%= f.submit "CSV出力", class: btn_class(:secondary) %>
+    <% end %>
+    <p class="text-xs text-slate-500">ロットごとの温度履歴は、各ロットの詳細画面から出力できます。</p>
+  </section>
+</div>
