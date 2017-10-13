@@ -1,0 +1,19 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">ゾーン温度ログ <%= @zone %></h1>
+  <div class="flex gap-3 print:hidden">
+    <%= link_to "CSV", zone_log_report_path(zone_id: @zone.id, from: params[:from], to: params[:to], format: :csv), class: btn_class(:secondary) %>
+    <button type="button" class="<%= btn_class(:secondary) %>" data-controller="print" data-action="print#print">印刷</button>
+    <%= link_to "戻る", reports_path, class: btn_class(:secondary) %>
+  </div>
+</div>
+<p class="mb-3 text-sm text-slate-600"><%= fmt_time(@from) %> 〜 <%= fmt_time(@to) %> / 警報範囲 <%= fmt_qty(@zone.alert_min) %>〜<%= fmt_qty(@zone.alert_max) %>℃ / 最大2,000件を表示(全件はCSV)</p>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">測定日時</th><th class="<%= th_class %>">センサー</th><th class="<%= th_class %>">温度(℃)</th><th class="<%= th_class %>">取得方法</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @readings.each do |r| %>
+        <tr class="<%= 'bg-red-50' if @zone.out_of_limits?(r.value) %>"><td class="<%= td_class %>"><%= fmt_time(r.measured_at) %></td><td class="<%= td_class %>"><%= r.sensor.name %></td><td class="<%= td_class %>"><%= fmt_qty(r.value) %></td><td class="<%= td_class %>"><%= enum_label(:source_type, r.source) %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
