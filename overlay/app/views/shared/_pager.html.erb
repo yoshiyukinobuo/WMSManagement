@@ -1,0 +1,7 @@
+<% if page > 1 || has_next %>
+  <div class="mt-4 flex items-center justify-between print:hidden">
+    <% if page > 1 %><%= link_to "← 前へ", url_for(request.query_parameters.merge(page: page - 1)), class: btn_class(:secondary) %><% else %><span></span><% end %>
+    <span class="text-sm text-slate-500"><%= page %> ページ</span>
+    <% if has_next %><%= link_to "次へ →", url_for(request.query_parameters.merge(page: page + 1)), class: btn_class(:secondary) %><% else %><span></span><% end %>
+  </div>
+<% end %>
