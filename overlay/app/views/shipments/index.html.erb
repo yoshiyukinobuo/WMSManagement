@@ -1,0 +1,28 @@
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-bold">出荷</h1>
+  <% if can?(:operate_stock) %><%= link_to "新規出荷指示", new_shipment_path, class: btn_class %><% end %>
+</div>
+<div class="mb-4 flex gap-2 text-sm">
+  <%= link_to "すべて", shipments_path, class: btn_class(:secondary) %>
+  <%= link_to "作業中", shipments_path(status: "draft"), class: btn_class(:secondary) %>
+  <%= link_to "出荷済", shipments_path(status: "shipped"), class: btn_class(:secondary) %>
+</div>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">#</th><th class="<%= th_class %>">作成</th><th class="<%= th_class %>">拠点</th><th class="<%= th_class %>">荷主</th><th class="<%= th_class %>">届け先</th><th class="<%= th_class %>">状態</th><th class="<%= th_class %>">出荷日時</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @shipments.each do |s| %>
+        <tr>
+          <td class="<%= td_class %>"><%= link_to s.id, s, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= fmt_time(s.created_at) %></td>
+          <td class="<%= td_class %>"><%= s.site.code %></td>
+          <td class="<%= td_class %>"><%= s.customer.name %></td>
+          <td class="<%= td_class %>"><%= s.destination %></td>
+          <td class="<%= td_class %>"><%= badge(enum_label(:status, s.status), s.shipped? ? :green : :sky) %></td>
+          <td class="<%= td_class %>"><%= fmt_time(s.shipped_at) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
