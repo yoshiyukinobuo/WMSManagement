@@ -1,0 +1,11 @@
+<h1 class="mb-4 text-2xl font-bold">出荷指示の作成</h1>
+<div class="<%= card_class %> max-w-2xl">
+  <%= render "shared/errors", record: @shipment %>
+  <%= form_with model: @shipment, class: "space-y-4" do |f| %>
+    <div><%= f.label :site_id, "拠点", class: label_class %><%= f.select :site_id, options_for_select(accessible_sites.map { |s| [s.to_s, s.id] }, @shipment.site_id), {}, class: input_class %></div>
+    <div><%= f.label :customer_id, "荷主", class: label_class %><%= f.select :customer_id, options_for_select(Customer.order(:code).map { |c| [c.to_s, c.id] }, @shipment.customer_id), {}, class: input_class %></div>
+    <div><%= f.label :destination, "届け先", class: label_class %><%= f.text_field :destination, class: input_class %></div>
+    <div><%= f.label :reference, "注文番号・参照", class: label_class %><%= f.text_field :reference, class: input_class %></div>
+    <div class="flex gap-3"><%= f.submit "作成", class: btn_class %><%= link_to "キャンセル", shipments_path, class: btn_class(:secondary) %></div>
+  <% end %>
+</div>
