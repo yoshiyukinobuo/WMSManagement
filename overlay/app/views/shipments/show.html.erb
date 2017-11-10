@@ -1,0 +1,43 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">出荷 #<%= @shipment.id %> <%= badge(enum_label(:status, @shipment.status), @shipment.shipped? ? :green : :sky) %></h1>
+  <div class="flex gap-3 print:hidden">
+    <button type="button" class="<%= btn_class(:secondary) %>" data-controller="print" data-action="print#print">ピッキングリスト印刷</button>
+    <%= link_to "一覧へ", shipments_path, class: btn_class(:secondary) %>
+  </div>
+</div>
+
+<div class="<%= card_class %> mb-6 grid gap-2 text-sm sm:grid-cols-3">
+  <div><span class="text-slate-500">拠点:</span> <%= @shipment.site %></div>
+  <div><span class="text-slate-500">荷主:</span> <%= @shipment.customer %></div>
+  <div><span class="text-slate-500">届け先:</span> <%= @shipment.destination %></div>
+  <div><span class="text-slate-500">参照:</span> <%= @shipment.reference %></div>
+  <div><span class="text-slate-500">車両/ドライバー:</span> <%= [@shipment.vehicle, @shipment.driver].compact_blank.join(" / ") %></div>
+  <div><span class="text-slate-500">出荷日時:</span> <%= fmt_time(@shipment.shipped_at) %></div>
+</div>
+
+<section class="<%= card_class %> mb-6 overflow-x-auto">
+  <h2 class="mb-2 font-semibold">ピッキングリスト(ロケーション順)</h2>
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ロケーション</th><th class="<%= th_class %>">ロットID</th><th class="<%= th_class %>">ロット番号</th><th class="<%= th_class %>">数量</th><th class="<%= th_class %>">期限</th><th class="<%= th_class %>">状態</th><th class="<%= th_class %> print:hidden"></th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @lines.each do |l| %>
+        <tr>
+          <td class="<%= td_class %>"><%= l.location %></td>
+          <td class="<%= td_class %>"><%= link_to l.lot.internal_id, l.lot, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= l.lot.lot_number %> <%= lot_status_badge(l.lot) unless l.lot.available? %></td>
+          <td class="<%= td_class %>"><%= fmt_qty(l.quantity) %></td>
+          <td class="<%= td_class %>"><%= fmt_date(l.lot.expires_on) %></td>
+          <td class="<%= td_class %>"><%= l.picked? ? badge("ピック済", :green) : badge("未", :slate) %></td>
+          <td class="<%= td_class %> print:hidden whitespace-nowrap">
+            <% if can?(:operate_stock) && !@shipment.shipped? %>
+              <% unless l.picked? %><%= button_to "ピック済", pick_shipment_shipment_line_path(@shipment, l), method: :patch, class: btn_class(:secondary), form: { class: "inline" } %><% end %>
+              <%= button_to "取消", shipment_shipment_line_path(@shipment, l), method: :delete, class: "text-red-600 underline", form: { class: "inline", data: { turbo_confirm: "引当を取り消しますか?" } } %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @lines.empty? %><tr><td colspan="7" class="px-3 py-6 text-center text-slate-500">引当がありません</td></tr><% end %>
+    </tbody>
+  </table>
+</section>
+
