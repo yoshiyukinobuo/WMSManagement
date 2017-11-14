@@ -41,3 +41,46 @@
   </table>
 </section>
 
+<% if can?(:operate_stock) && !@shipment.shipped? %>
+  <div class="grid gap-6 lg:grid-cols-2 print:hidden">
+    <section class="<%= card_class %>">
+      <h2 class="mb-3 font-semibold">自動引当(FIFO / FEFO)</h2>
+      <%= form_with url: auto_shipment_shipment_lines_path(@shipment), class: "space-y-3" do |f| %>
+        <div><%= f.label :item_id, "品目", class: label_class %><%= f.select :item_id, options_for_select(@items.map { |i| [i.to_s, i.id] }), { include_blank: "(指定なし)" }, class: input_class %></div>
+        <div><%= f.label :lot_number, "ロット番号(前方一致・任意)", class: label_class %><%= f.text_field :lot_number, class: input_class %></div>
+        <div><%= f.label :quantity, "数量", class: label_class %><%= f.number_field :quantity, step: "any", min: 0, required: true, class: input_class %></div>
+        <div><%= f.label :rule, "引当ルール", class: label_class %>
+          <%= f.select :rule, options_for_select([["先入れ先出し(FIFO)", "fifo"], ["賞味期限の早い順(FEFO)", "fefo"]], Rails.configuration.x.allocation_rule), {}, class: input_class %></div>
+        <%= f.submit "引当", class: btn_class %>
+      <% end %>
+    </section>
+
+    <section class="<%= card_class %>">
+      <h2 class="mb-3 font-semibold">ロットを指定して引当</h2>
+      <% options = StockLevel.joins(:lot, location: :zone).where(lots: { customer_id: @shipment.customer_id, status: "available" }, zones: { site_id: @shipment.site_id }).includes(:lot, :location).order("lots.received_on, lots.id").limit(300) %>
+      <%= form_with model: [@shipment, ShipmentLine.new], class: "space-y-3", data: { controller: "stock-choice" } do |f| %>
+        <div>
+          <label class="<%= label_class %>" for="manual_choice">在庫(ロット @ ロケーション)</label>
+          <select id="manual_choice" class="<%= input_class %>" data-action="change->stock-choice#choose">
+            <option value="">選択してください</option>
+            <% options.each do |lv| %><option value="<%= lv.lot_id %>:<%= lv.location_id %>"><%= lv.lot.internal_id %> <%= lv.lot.lot_number %> @ <%= lv.location.code %>(<%= fmt_qty(lv.quantity) %>)</option><% end %>
+          </select>
+        </div>
+        <%= f.hidden_field :lot_id, data: { stock_choice_target: "lot" } %>
+        <%= f.hidden_field :location_id, data: { stock_choice_target: "location" } %>
+        <div><%= f.label :quantity, "数量", class: label_class %><%= f.number_field :quantity, step: "any", min: 0, class: input_class %></div>
+        <%= f.submit "引当", class: btn_class(:secondary) %>
+      <% end %>
+    </section>
+
+    <section class="<%= card_class %> lg:col-span-2">
+      <h2 class="mb-3 font-semibold">出荷確定</h2>
+      <%= form_with url: ship_shipment_path(@shipment), method: :patch, class: "grid gap-3 sm:grid-cols-3", data: { turbo_confirm: "出荷を確定し在庫を減らします。よろしいですか?" } do |f| %>
+        <div><%= f.label :vehicle, "車両", class: label_class %><%= f.text_field :vehicle, value: @shipment.vehicle, class: input_class, required: true %></div>
+        <div><%= f.label :driver, "ドライバー", class: label_class %><%= f.text_field :driver, value: @shipment.driver, class: input_class, required: true %></div>
+        <div class="flex items-end"><%= f.submit "出荷確定", class: btn_class %></div>
+      <% end %>
+      <p class="mt-2 text-xs text-slate-500">全明細のピッキング完了が必要です。保留中のロットは出荷できません。</p>
+    </section>
+  </div>
+<% end %>
