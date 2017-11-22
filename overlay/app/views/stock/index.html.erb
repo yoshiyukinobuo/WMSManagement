@@ -19,3 +19,24 @@
 <% end %>
 
 <div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ロケーション</th><th class="<%= th_class %>">ロットID</th><th class="<%= th_class %>">ロット番号</th><th class="<%= th_class %>">荷主</th><th class="<%= th_class %>">数量</th><th class="<%= th_class %>">入荷日</th><th class="<%= th_class %>">期限</th><th class="<%= th_class %>">状態</th><th class="<%= th_class %>"></th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @levels.each do |lv| %>
+        <tr>
+          <td class="<%= td_class %>"><%= lv.location %></td>
+          <td class="<%= td_class %>"><%= link_to lv.lot.internal_id, lv.lot, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= lv.lot.lot_number %></td>
+          <td class="<%= td_class %>"><%= lv.lot.customer.name %></td>
+          <td class="<%= td_class %> font-semibold"><%= fmt_qty(lv.quantity) %></td>
+          <td class="<%= td_class %>"><%= fmt_date(lv.lot.received_on) %></td>
+          <td class="<%= td_class %>"><%= fmt_date(lv.lot.expires_on) %></td>
+          <td class="<%= td_class %>"><%= lot_status_badge(lv.lot) %></td>
+          <td class="<%= td_class %>"><% if can?(:operate_stock) %><%= link_to "移動", new_movement_path(lot_id: lv.lot_id, from_location_id: lv.location_id), class: "text-sky-700 underline" %><% end %></td>
+        </tr>
+      <% end %>
+      <% if @levels.empty? %><tr><td colspan="9" class="px-3 py-6 text-center text-slate-500">在庫がありません</td></tr><% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
