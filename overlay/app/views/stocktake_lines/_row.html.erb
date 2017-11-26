@@ -1,0 +1,14 @@
+<tr id="<%= dom_id(line) %>" class="<%= 'bg-amber-50' if line.variance && !line.variance.zero? %>">
+  <td class="<%= td_class %>"><%= line.location %></td>
+  <td class="<%= td_class %>"><%= link_to "#{line.lot.internal_id} #{line.lot.lot_number}", line.lot, class: "text-sky-700 underline" %></td>
+  <td class="<%= td_class %>"><%= fmt_qty(line.system_quantity) %></td>
+  <td class="<%= td_class %>">
+    <% if stocktake.counting? && can?(:operate_stock) %>
+      <%= form_with model: [stocktake, line], class: "flex gap-2" do |f| %>
+        <%= f.number_field :counted_quantity, step: "any", min: 0, class: "#{input_class} max-w-[10rem]", value: line.counted_quantity && fmt_qty(line.counted_quantity).delete(",") %>
+        <%= f.submit "保存", class: btn_class(:secondary) %>
+      <% end %>
+    <% else %><%= fmt_qty(line.counted_quantity) %><% end %>
+  </td>
+  <td class="<%= td_class %>"><%= fmt_qty(line.variance) %></td>
+</tr>
