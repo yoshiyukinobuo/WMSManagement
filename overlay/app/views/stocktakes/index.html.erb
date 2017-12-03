@@ -1,0 +1,21 @@
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-2xl font-bold">棚卸</h1>
+  <% if can?(:operate_stock) %><%= link_to "棚卸を開始", new_stocktake_path, class: btn_class %><% end %>
+</div>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">#</th><th class="<%= th_class %>">開始</th><th class="<%= th_class %>">拠点</th><th class="<%= th_class %>">対象ゾーン</th><th class="<%= th_class %>">状態</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @stocktakes.each do |s| %>
+        <tr>
+          <td class="<%= td_class %>"><%= link_to s.id, s, class: "text-sky-700 underline" %></td>
+          <td class="<%= td_class %>"><%= fmt_time(s.created_at) %></td>
+          <td class="<%= td_class %>"><%= s.site.code %></td>
+          <td class="<%= td_class %>"><%= s.zone&.name || "全ゾーン" %></td>
+          <td class="<%= td_class %>"><%= badge(enum_label(:status, s.status), s.approved? ? :green : :sky) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
