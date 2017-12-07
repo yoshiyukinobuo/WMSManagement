@@ -1,0 +1,10 @@
+<h1 class="mb-4 text-2xl font-bold">棚卸の開始</h1>
+<div class="<%= card_class %> max-w-xl">
+  <%= form_with url: stocktakes_path, class: "space-y-4" do |f| %>
+    <div><%= f.label :site_id, "拠点", class: label_class %><%= f.select :site_id, options_for_select(@sites.map { |s| [s.to_s, s.id] }), {}, class: input_class %></div>
+    <div><%= f.label :zone_id, "ゾーン(任意)", class: label_class %><%= f.select :zone_id, options_for_select(@zones.map { |z| [z.to_s, z.id] }), { include_blank: "全ゾーン" }, class: input_class %></div>
+    <div><%= f.label :note, "備考", class: label_class %><%= f.text_field :note, class: input_class %></div>
+    <p class="text-xs text-slate-500">開始時点の帳簿在庫をカウントシートとして固定します。</p>
+    <div class="flex gap-3"><%= f.submit "開始", class: btn_class %><%= link_to "キャンセル", stocktakes_path, class: btn_class(:secondary) %></div>
+  <% end %>
+</div>
