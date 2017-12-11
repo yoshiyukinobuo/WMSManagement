@@ -1,0 +1,21 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">棚卸 #<%= @stocktake.id %> <%= badge(enum_label(:status, @stocktake.status), @stocktake.approved? ? :green : :sky) %></h1>
+  <div class="flex gap-3">
+    <%= link_to "一覧へ", stocktakes_path, class: btn_class(:secondary) %>
+    <% if @stocktake.counting? && can?(:operate_stock) %>
+      <%= button_to "提出", submit_stocktake_path(@stocktake), method: :patch, class: btn_class, form: { data: { turbo_confirm: "提出しますか?" } } %>
+    <% end %>
+    <% if @stocktake.submitted? && can?(:approve_stocktake) %>
+      <%= button_to "承認して在庫へ反映", approve_stocktake_path(@stocktake), method: :patch, class: btn_class, form: { data: { turbo_confirm: "差異を調整として在庫に反映します。よろしいですか?" } } %>
+    <% end %>
+  </div>
+</div>
+<p class="mb-4 text-sm text-slate-600"><%= @stocktake.site %> / <%= @stocktake.zone&.name || "全ゾーン" %> / 開始者 <%= @stocktake.started_by %> <%= "/ 承認者 #{@stocktake.approved_by}" if @stocktake.approved_by %></p>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">ロケーション</th><th class="<%= th_class %>">ロット</th><th class="<%= th_class %>">帳簿数量</th><th class="<%= th_class %>">実数(カウント)</th><th class="<%= th_class %>">差異</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @lines.each do |line| %><%= render "stocktake_lines/row", stocktake: @stocktake, line: line %><% end %>
+    </tbody>
+  </table>
+</div>
