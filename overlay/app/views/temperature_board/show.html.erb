@@ -1,0 +1,28 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">温度管理</h1>
+  <div class="flex flex-wrap gap-3">
+    <% if can?(:record_temperature) %>
+      <%= link_to "巡回記録(手入力)", new_temperature_reading_path, class: btn_class %>
+      <%= link_to "CSV取込", new_reading_import_path, class: btn_class(:secondary) %>
+    <% end %>
+    <%= link_to "測定値一覧", temperature_readings_path, class: btn_class(:secondary) %>
+  </div>
+</div>
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <% @zones.each do |zone| %>
+    <% latest = @latest[zone.id]; open = @open[zone.id]; missing = zone.missing_data? %>
+    <div class="<%= card_class %> <%= 'border-red-400' if open %>">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold"><%= zone %></h2>
+        <%= if open then badge("逸脱中", :red) elsif missing then badge("データ欠測", :amber) else badge("正常", :green) end %>
+      </div>
+      <p class="text-sm text-slate-500"><%= enum_label(:zone_type, zone.zone_type) %> / 警報 <%= fmt_qty(zone.alert_min) %>〜<%= fmt_qty(zone.alert_max) %>℃ / 間隔 <%= zone.expected_interval_minutes %>分</p>
+      <p class="mt-2 text-sm">最終測定: <%= latest ? fmt_time(latest) : "なし" %></p>
+      <div class="mt-2 flex gap-3 text-sm">
+        <%= link_to "測定値", temperature_readings_path(zone_id: zone.id), class: "text-sky-700 underline" %>
+        <%= link_to "ログCSV", zone_log_report_path(zone_id: zone.id, format: :csv), class: "text-sky-700 underline" %>
+        <%= link_to "逸脱##{open.id}", open, class: "text-red-700 underline" if open %>
+      </div>
+    </div>
+  <% end %>
+</div>
