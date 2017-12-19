@@ -1,0 +1,26 @@
+<h1 class="mb-4 text-2xl font-bold">測定値</h1>
+<%= form_with url: temperature_readings_path, method: :get, class: "mb-4 flex flex-wrap gap-3", data: { controller: "search" } do |f| %>
+  <%= f.select :zone_id, options_for_select(@zones.map { |z| [z.to_s, z.id] }, params[:zone_id]), { include_blank: "全ゾーン" }, class: "#{input_class} max-w-xs", data: { action: "change->search#submit" } %>
+  <%= f.datetime_local_field :from, value: params[:from], class: "#{input_class} max-w-xs", data: { action: "change->search#submit" } %>
+  <%= f.datetime_local_field :to, value: params[:to], class: "#{input_class} max-w-xs", data: { action: "change->search#submit" } %>
+<% end %>
+<div class="<%= card_class %> overflow-x-auto">
+  <table class="<%= table_class %>">
+    <thead><tr><th class="<%= th_class %>">測定日時</th><th class="<%= th_class %>">ゾーン</th><th class="<%= th_class %>">センサー</th><th class="<%= th_class %>">温度(℃)</th><th class="<%= th_class %>">取得方法</th><th class="<%= th_class %>">備考</th><th class="<%= th_class %>"></th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      <% @readings.each do |r| %>
+        <tr class="<%= 'bg-red-50' if r.zone.out_of_limits?(r.value) %>">
+          <td class="<%= td_class %>"><%= fmt_time(r.measured_at) %></td>
+          <td class="<%= td_class %>"><%= r.zone %></td>
+          <td class="<%= td_class %>"><%= r.sensor.name %></td>
+          <td class="<%= td_class %> font-semibold"><%= fmt_qty(r.value) %></td>
+          <td class="<%= td_class %>"><%= enum_label(:source_type, r.source) %></td>
+          <td class="<%= td_class %>"><%= "訂正: #{r.correction_reason}" if r.corrects_id %></td>
+          <td class="<%= td_class %>"><% if can?(:record_temperature) %><%= link_to "訂正", correct_temperature_reading_path(r), class: "text-sky-700 underline" %><% end %></td>
+        </tr>
+      <% end %>
+      <% if @readings.empty? %><tr><td colspan="7" class="px-3 py-6 text-center text-slate-500">測定値がありません</td></tr><% end %>
+    </tbody>
+  </table>
+</div>
+<%= render "shared/pager", page: @page, has_next: @has_next %>
