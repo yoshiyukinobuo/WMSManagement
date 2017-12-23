@@ -1,0 +1,20 @@
+<h1 class="mb-4 text-2xl font-bold">温度巡回記録</h1>
+<div class="<%= card_class %> max-w-2xl">
+  <%= form_with url: new_temperature_reading_path, method: :get, class: "mb-4 flex gap-3" do |f| %>
+    <%= f.select :site_id, options_for_select(@sites.map { |s| [s.to_s, s.id] }, @site&.id), {}, class: input_class, data: { controller: "search", action: "change->search#submit" } %>
+  <% end %>
+  <% if @site %>
+    <%= form_with url: temperature_readings_path, class: "space-y-4" do |f| %>
+      <%= f.hidden_field :site_id, value: @site.id %>
+      <div><%= f.label :measured_at, "測定日時", class: label_class %><%= f.datetime_local_field :measured_at, value: Time.current.strftime("%Y-%m-%dT%H:%M"), class: input_class %></div>
+      <% @zones.each do |zone| %>
+        <div>
+          <%= label_tag "values_#{zone.id}", "#{zone.name}(警報 #{fmt_qty(zone.alert_min)}〜#{fmt_qty(zone.alert_max)}℃)", class: label_class %>
+          <%= text_field_tag "values[#{zone.id}]", nil, id: "values_#{zone.id}", inputmode: "decimal", placeholder: "℃", class: "#{input_class} text-xl" %>
+        </div>
+      <% end %>
+      <p class="text-xs text-slate-500">入力したゾーンのみ登録されます。範囲外の値は即座に逸脱として検知されます。</p>
+      <%= f.submit "登録", class: btn_class %>
+    <% end %>
+  <% end %>
+</div>
