@@ -1,0 +1,10 @@
+<h1 class="mb-4 text-2xl font-bold">測定値の訂正</h1>
+<div class="<%= card_class %> max-w-xl">
+  <p class="mb-4 text-sm"><%= @reading.zone %> / <%= fmt_time(@reading.measured_at) %> / 現在の値 <strong><%= fmt_qty(@reading.value) %>℃</strong></p>
+  <%= form_with url: correct_temperature_reading_path(@reading), class: "space-y-4" do |f| %>
+    <div><%= f.label :value, "正しい値(℃)", class: label_class %><%= f.text_field :value, inputmode: "decimal", required: true, class: input_class %></div>
+    <div><%= f.label :reason, "訂正理由", class: label_class %><%= f.text_field :reason, required: true, class: input_class %></div>
+    <p class="text-xs text-slate-500">元の値は削除されず、訂正記録が新しい行として追加されます。</p>
+    <div class="flex gap-3"><%= f.submit "訂正を登録", class: btn_class %><%= link_to "キャンセル", temperature_readings_path(zone_id: @reading.zone_id), class: btn_class(:secondary) %></div>
+  <% end %>
+</div>
