@@ -1,0 +1,19 @@
+<div class="<%= card_class %> max-w-2xl">
+  <%= render "shared/errors", record: user %>
+  <%= form_with model: user, class: "space-y-4" do |f| %>
+    <div><%= f.label :name, "氏名", class: label_class %><%= f.text_field :name, class: input_class %></div>
+    <div><%= f.label :email_address, "メールアドレス", class: label_class %><%= f.email_field :email_address, class: input_class %></div>
+    <div><%= f.label :role, "ロール", class: label_class %><%= f.select :role, options_for_select(enum_options(:role, User::ROLES), user.role), {}, class: input_class %></div>
+    <div><%= f.label :password, user.new_record? ? "パスワード(10文字以上)" : "パスワード(変更する場合のみ)", class: label_class %><%= f.password_field :password, autocomplete: "new-password", class: input_class %></div>
+    <fieldset>
+      <legend class="<%= label_class %>">アクセス可能な拠点(システム管理者は全拠点)</legend>
+      <div class="grid gap-1 sm:grid-cols-2">
+        <% Site.order(:code).each do |site| %>
+          <label class="flex min-h-[44px] items-center gap-2"><%= check_box_tag "user[site_ids][]", site.id, user.site_ids.include?(site.id), id: "site_#{site.id}", class: "h-5 w-5" %> <%= site %></label>
+        <% end %>
+      </div>
+    </fieldset>
+    <label class="flex min-h-[44px] items-center gap-2"><%= f.check_box :active, class: "h-5 w-5" %> 有効</label>
+    <div class="flex gap-3"><%= f.submit "保存", class: btn_class %><%= link_to "キャンセル", users_path, class: btn_class(:secondary) %></div>
+  <% end %>
+</div>
