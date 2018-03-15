@@ -30,3 +30,35 @@ class ShippingTest < ActiveSupport::TestCase
     make_lot(site: @site, customer: @customer, qty: 2, location: @loc)
     assert_raises(Inventory::InsufficientStock) { Shipping::Allocate.call(shipment: @shipment, quantity: 5) }
     assert_equal 0, @shipment.shipment_lines.count
+  end
+
+  test "stock promised to another order is not allocated twice" do
+    make_lot(site: @site, customer: @customer, qty: 5, location: @loc)
+    Shipping::Allocate.call(shipment: @shipment, quantity: 4)
+    other = Shipment.create!(site: @site, customer: @customer)
+    assert_raises(Inventory::InsufficientStock) { Shipping::Allocate.call(shipment: other, quantity: 3) }
+  end
+
+  test "held lots cannot be allocated or shipped" do
+    lot = make_lot(site: @site, customer: @customer, qty: 5, location: @loc)
+    Shipping::Allocate.call(shipment: @shipment, quantity: 2)
+    lot.hold!(reason: "test")
+    @shipment.shipment_lines.update_all(picked_at: Time.current)
+    error = assert_raises(Inventory::Error) { Shipping::Confirm.call(shipment: @shipment, vehicle: "秋田100", driver: "山田") }
+    assert_match(/保留/, error.message)
+    assert_equal 5, lot.total_quantity
+    other = Shipment.create!(site: @site, customer: @customer)
+    assert_raises(Inventory::InsufficientStock) { Shipping::Allocate.call(shipment: other, quantity: 1) }
+  end
+
+  test "confirm writes ship movements and marks an emptied lot shipped" do
+    lot = make_lot(site: @site, customer: @customer, qty: 5, location: @loc)
+    Shipping::Allocate.call(shipment: @shipment, quantity: 5)
+    assert_raises(Inventory::Error) { Shipping::Confirm.call(shipment: @shipment, vehicle: "v", driver: "d") } # not picked yet
+    @shipment.shipment_lines.update_all(picked_at: Time.current)
+    Shipping::Confirm.call(shipment: @shipment, vehicle: "秋田100", driver: "山田")
+    assert @shipment.reload.shipped?
+    assert_equal 0, lot.total_quantity
+    assert_equal "shipped", lot.reload.status
+  end
+end
